@@ -40,7 +40,7 @@ exp_cases$rainfall <- min_max_scale(goundi_met_30$rainfall, min_cases, max_cases
 p1 <- exp_cases %>% ggplot(aes(x = date, y = inc)) +
   geom_bar(stat = "identity", position = "dodge", width = 24) +
   geom_line(aes(group = 1, y = rainfall), color = "blue", linewidth = 0.8) + 
-  theme_bw() + xlab("") + ylab("monthly cases") + ggtitle("Daily Rainfall vs 30 Day Moving Average") +
+  theme_bw() + xlab("") + ylab("monthly cases") +
   theme(plot.title = element_text(hjust=0.5, size = 16),
         axis.text.x = element_text(size = 10),
         axis.title.y = element_text(size = 12))
