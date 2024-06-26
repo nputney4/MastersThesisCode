@@ -1,5 +1,4 @@
 SIR_continuous <- odin::odin({
-  ## This code is not R code!
   deriv(S) <- - (beta * I/N) * S 
   deriv(I) <- (beta * I/N) * S - gamma * I
   deriv(R) <- gamma * I 
