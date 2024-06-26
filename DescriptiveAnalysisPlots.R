@@ -114,8 +114,9 @@ total_cases_by_district <- add_SMC_column(total_cases_by_district, SMC_months)
 ################################################################################
 ### ------------------- TOTAL MONTHLY CASES ACROSS DISTRICTS --------------- ###
 ################################################################################
-color <- "#4a695a"
-
+tot_color <- "#4a695a"
+u5_color <- "#BD8058"
+o5_color <- "#484673"
 # bar graph of total cases across all districts
 month_inc_plot <- total_cases_by_district %>% ggplot(aes(x = as.Date(date_ymd), y = inc_total * 1000, alpha = SMC)) +
   geom_bar(stat = "identity", position = "dodge") + scale_alpha_manual(values = c(0.7, 1)) +
@@ -125,10 +126,59 @@ month_inc_plot <- total_cases_by_district %>% ggplot(aes(x = as.Date(date_ymd), 
         axis.text.x = element_text(size = 10),
         axis.title.y = element_text(size = 12))
 
-ggsave(month_inc_plot, filename = paste(plot_loc, "month_incidence_by_district.pdf", sep = ""), device = "pdf",
+ggsave(month_inc_plot, filename = paste(plot_loc, "descriptive-analysis/month_incidence_by_district.pdf", sep = ""), device = "pdf",
        heigh = 6, width = 14, units = "in")
 
+################################################################################
+### ------------------ MONTHLY CASES BY AGE ACROSS DISTRICTS --------------- ###
+################################################################################
+u5_inc <- u5_cases_by_district %>% ggplot(aes(x = as.Date(date_ymd), y = inc_u5 * 1000, alpha = SMC)) +
+  geom_bar(stat = "identity", position = "dodge", color = u5_color) + scale_alpha_manual(values = c(0.7, 1)) +
+  facet_wrap(~district, ncol = 1) +
+  ylab("Monthly Cases per 1000 Population") + xlab("") + theme_bw() + ylab("") + 
+  ggtitle("Under 5") +
+  theme(plot.title = element_text(hjust=0.5, size=12),
+        axis.text.x = element_text(size = 10),
+        axis.title.y = element_text(size = 12))
+
+o5_inc <- o5_cases_by_district %>% ggplot(aes(x = as.Date(date_ymd), y = inc_o5 * 1000, alpha = SMC)) +
+  geom_bar(stat = "identity", position = "dodge", color = o5_color) + scale_alpha_manual(values = c(0.7, 1)) +
+  facet_wrap(~district, ncol = 1) +
+  ylab("Monthly Cases per 1000 Population") + xlab("") + theme_bw() + 
+  ggtitle("Over 5") +
+  theme(plot.title = element_text(hjust=0.5, size=12),
+        axis.text.x = element_text(size = 10),
+        axis.title.y = element_text(size = 12)) + theme(legend.position="none")
+
+u5o5_inc <- o5_inc + u5_inc
+ggsave(u5o5_inc, filename = paste(plot_loc, "descriptive-analysis/month_incidence_by_age.pdf", sep = ""), device = "pdf",
+       heigh = 6, width = 18, units = "in")
 
 ################################################################################
-### ------------------- TOTAL MONTHLY CASES ACROSS DISTRICTS --------------- ###
+### ------------------ YEARLY CASES BY AGE ACROSS DISTRICTS ---------------- ###
 ################################################################################
+# grouping by year and district
+colnames_data <- c("date_ymd", "district", "year", "cases", "inc", "SMC")
+colnames(u5_cases_by_district) <- colnames_data
+colnames(o5_cases_by_district) <- colnames_data
+colnames(total_cases_by_district) <- colnames_data
+
+inc_by_year_by_district_u5 <- u5_cases_by_district %>% group_by(year = year(date_ymd), district) %>% summarize(yearly_inc = sum(inc))
+inc_by_year_by_district_o5 <- o5_cases_by_district %>% group_by(year = year(date_ymd), district) %>% summarize(yearly_inc = sum(inc))
+inc_by_year_by_district <- rbind(cases_by_year_by_district_u5, cases_by_year_by_district_o5)
+cases_by_year_by_district$age <- c(rep("u5", 36), rep("o5", 36))
+cases_by_year_by_district$SMC <- rep("No", nrow(cases_by_year_by_district))
+cases_by_year_by_district$SMC[(cases_by_year_by_district$district == "MOISSALA") & (cases_by_year_by_district$year != 2019)] = "Yes"
+
+# line graph
+year_inc <- na.omit(cases_by_year_by_district) %>% ggplot(aes(x = factor(year), y = yearly_inc * 1000, color = age, shape = SMC, group = age)) +
+  geom_point(size = 3.5, na.rm = FALSE) + geom_line(linewidth = 1.05, na.rm = FALSE) + 
+  scale_color_manual(values = c(u5 = u5_color, o5 = o5_color))  + 
+  facet_wrap(~ district, ncol = 1, scale = "free") + 
+  labs(x = "", y = "Yearly Cases per 1000 Population", title = "") +
+  theme_bw() + theme(plot.title = element_text(hjust=0.5, size=12),
+                     axis.text.x = element_text(size = 10),
+                     axis.title.y = element_text(size = 12))
+
+ggsave(year_inc, filename = paste(plot_loc, "descriptive-analysis/year_incidence_by_age.pdf", sep = ""), device = "pdf",
+       heigh = 6, width = 10, units = "in")
