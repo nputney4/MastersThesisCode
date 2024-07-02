@@ -63,6 +63,15 @@ total_cases_by_district <- PNLP_chad %>%
   mutate(year = as.numeric(format(date_ymd, "%Y")))
 
 ################################################################################
+### ------------------- DEFINING THEME TO USE FOR GGPLOT2  ----------------- ###
+################################################################################
+theme_desc <- theme(plot.title = element_text(hjust=0.5, size=20),
+      axis.text.x = element_text(size = 14),
+      axis.title.y = element_text(size = 16),
+      legend.title = element_text(size=16),
+      legend.text = element_text(size = 14))
+
+################################################################################
 ### ------------------- ADDING INCIDENCE COLUMN ---------------------------- ###
 ################################################################################
 u5_cases_by_district <- u5_cases_by_district %>% 
@@ -79,6 +88,12 @@ total_cases_by_district <- total_cases_by_district %>%
   left_join(pop_estimates %>% filter(subpop == "all_ages") %>% 
               dplyr::select(-date_ymd), by = c("district", "year"))  %>% 
   mutate(inc_total = cases_total / value) %>% dplyr::select(c(date_ymd, district, year, cases_total, inc_total))
+
+
+colnames_data <- c("date_ymd", "district", "year", "cases", "inc")
+colnames(u5_cases_by_district) <- colnames_data
+colnames(o5_cases_by_district) <- colnames_data
+colnames(total_cases_by_district) <- colnames_data
 
 ################################################################################
 ### ------------------- ADDING SMC STATUS TO CASE DATA --------------------- ###
@@ -118,67 +133,60 @@ tot_color <- "#4a695a"
 u5_color <- "#BD8058"
 o5_color <- "#484673"
 # bar graph of total cases across all districts
-month_inc_plot <- total_cases_by_district %>% ggplot(aes(x = as.Date(date_ymd), y = inc_total * 1000, alpha = SMC)) +
-  geom_bar(stat = "identity", position = "dodge") + scale_alpha_manual(values = c(0.7, 1)) +
+month_inc_plot <- total_cases_by_district %>% ggplot(aes(x = as.Date(date_ymd), y = inc * 1000, alpha = SMC)) +
+  geom_bar(stat = "identity", position = "dodge", color = tot_color) + scale_alpha_manual(values = c(0.7, 1)) +
   facet_wrap(~district, ncol = 1) +
   ylab("Monthly Cases per 1000 Population") + xlab("") + theme_bw() + 
-  theme(plot.title = element_text(hjust=0.5, size=12),
-        axis.text.x = element_text(size = 10),
-        axis.title.y = element_text(size = 12))
+  theme_desc
 
 ggsave(month_inc_plot, filename = paste(plot_loc, "descriptive-analysis/month_incidence_by_district.pdf", sep = ""), device = "pdf",
-       heigh = 6, width = 14, units = "in")
+       heigh = 5, width = 11, units = "in")
 
 ################################################################################
 ### ------------------ MONTHLY CASES BY AGE ACROSS DISTRICTS --------------- ###
 ################################################################################
-u5_inc <- u5_cases_by_district %>% ggplot(aes(x = as.Date(date_ymd), y = inc_u5 * 1000, alpha = SMC)) +
+u5_inc <- u5_cases_by_district %>% ggplot(aes(x = as.Date(date_ymd), y = inc * 1000, alpha = SMC)) +
   geom_bar(stat = "identity", position = "dodge", color = u5_color) + scale_alpha_manual(values = c(0.7, 1)) +
   facet_wrap(~district, ncol = 1) +
   ylab("Monthly Cases per 1000 Population") + xlab("") + theme_bw() + ylab("") + 
-  ggtitle("Under 5") +
-  theme(plot.title = element_text(hjust=0.5, size=12),
-        axis.text.x = element_text(size = 10),
-        axis.title.y = element_text(size = 12))
+  ggtitle("Under 5") + theme_desc + 
+  theme(plot.title = element_text(size = 24),
+        axis.title.y = element_text(size = 20),
+        legend.title = element_text(size = 20),
+        legend.text = element_text(size = 18))
 
-o5_inc <- o5_cases_by_district %>% ggplot(aes(x = as.Date(date_ymd), y = inc_o5 * 1000, alpha = SMC)) +
+o5_inc <- o5_cases_by_district %>% ggplot(aes(x = as.Date(date_ymd), y = inc * 1000, alpha = SMC)) +
   geom_bar(stat = "identity", position = "dodge", color = o5_color) + scale_alpha_manual(values = c(0.7, 1)) +
   facet_wrap(~district, ncol = 1) +
   ylab("Monthly Cases per 1000 Population") + xlab("") + theme_bw() + 
-  ggtitle("Over 5") +
-  theme(plot.title = element_text(hjust=0.5, size=12),
-        axis.text.x = element_text(size = 10),
-        axis.title.y = element_text(size = 12)) + theme(legend.position="none")
+  ggtitle("Over 5") + theme_desc + theme(legend.position="none") +
+  theme(plot.title = element_text(size = 24),
+        axis.title.y = element_text(size = 18),
+        legend.title = element_text(size = 20),
+        legend.text = element_text(size = 18))
 
 u5o5_inc <- o5_inc + u5_inc
 ggsave(u5o5_inc, filename = paste(plot_loc, "descriptive-analysis/month_incidence_by_age.pdf", sep = ""), device = "pdf",
-       heigh = 6, width = 18, units = "in")
+       height = 5, width = 11, units = "in")
 
 ################################################################################
 ### ------------------ YEARLY CASES BY AGE ACROSS DISTRICTS ---------------- ###
 ################################################################################
-# grouping by year and district
-colnames_data <- c("date_ymd", "district", "year", "cases", "inc", "SMC")
-colnames(u5_cases_by_district) <- colnames_data
-colnames(o5_cases_by_district) <- colnames_data
-colnames(total_cases_by_district) <- colnames_data
-
+# grouping by year and distric
 inc_by_year_by_district_u5 <- u5_cases_by_district %>% group_by(year = year(date_ymd), district) %>% summarize(yearly_inc = sum(inc))
 inc_by_year_by_district_o5 <- o5_cases_by_district %>% group_by(year = year(date_ymd), district) %>% summarize(yearly_inc = sum(inc))
-inc_by_year_by_district <- rbind(cases_by_year_by_district_u5, cases_by_year_by_district_o5)
-cases_by_year_by_district$age <- c(rep("u5", 36), rep("o5", 36))
-cases_by_year_by_district$SMC <- rep("No", nrow(cases_by_year_by_district))
-cases_by_year_by_district$SMC[(cases_by_year_by_district$district == "MOISSALA") & (cases_by_year_by_district$year != 2019)] = "Yes"
+inc_by_year_by_district <- rbind(inc_by_year_by_district_u5, inc_by_year_by_district_o5)
+inc_by_year_by_district$age <- c(rep("u5", 36), rep("o5", 36))
+inc_by_year_by_district$SMC <- rep("No", nrow(inc_by_year_by_district))
+inc_by_year_by_district$SMC[(inc_by_year_by_district$district == "MOISSALA") & (inc_by_year_by_district$year != 2019)] = "Yes"
 
 # line graph
-year_inc <- na.omit(cases_by_year_by_district) %>% ggplot(aes(x = factor(year), y = yearly_inc * 1000, color = age, shape = SMC, group = age)) +
+year_inc <- na.omit(inc_by_year_by_district) %>% ggplot(aes(x = factor(year), y = yearly_inc * 1000, color = age, shape = SMC, group = age)) +
   geom_point(size = 3.5, na.rm = FALSE) + geom_line(linewidth = 1.05, na.rm = FALSE) + 
   scale_color_manual(values = c(u5 = u5_color, o5 = o5_color))  + 
   facet_wrap(~ district, ncol = 1, scale = "free") + 
-  labs(x = "", y = "Yearly Cases per 1000 Population", title = "") +
-  theme_bw() + theme(plot.title = element_text(hjust=0.5, size=12),
-                     axis.text.x = element_text(size = 10),
-                     axis.title.y = element_text(size = 12))
+  labs(x = "", y = "Yearly Cases per 1000 Population", title = "") + theme_bw() + 
+  theme_desc
 
 ggsave(year_inc, filename = paste(plot_loc, "descriptive-analysis/year_incidence_by_age.pdf", sep = ""), device = "pdf",
-       heigh = 6, width = 10, units = "in")
+       heigh = 5, width = 11, units = "in")

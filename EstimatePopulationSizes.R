@@ -4,6 +4,13 @@
 
 library(readxl)
 library(reshape2)
+
+theme_pop <- theme(plot.title = element_text(hjust=0.5, size=20),
+                    axis.text.x = element_text(size = 10),
+                    axis.title.y = element_text(size = 16),
+                    legend.title = element_text(size=16),
+                    legend.text = element_text(size = 14))
+
 # assuming uniform population growth across age groups across Chad between 2014 and 2022
 # assuming growth between 2014 and 2022 is approximately linear
 # estimate previous year total population and 5 and under population in districts of interest
@@ -41,18 +48,6 @@ format_pop_data <- function(pop_growth, subpop){
   pop_growth <- pop_growth[colnames(PNLP_chad)] # reordering columns
   return(pop_growth)
 }
-
-
-# fit linear model and assess fit
-# y1 <- chad_demo$population_total
-# y2 <- chad_demo$population_5_and_under
-# year <- chad_demo$Year
-# year <- 1:11
-# 
-# lm1 <- lm(y1 ~ year)  
-# 
-# plot(year, y1, cex = 2, col = "blue", xlab = "Year", ylab = "Population", main = "Linear Fit to Chad Population")
-# lines(year, predict(lm1, as.data.frame(x))) # seems to be very linear in this window
 
 # calculate growth rate for Chad - years going backwords (so negative growth rate)
 growth_rate_CHAD_total <- diff(chad_demo$population_total) / chad_demo$population_total[1:10]
@@ -104,10 +99,9 @@ saveRDS(pop_pred, paste(dir_demo, "mandoul_estimated_population", sep = ""))
 # plotting population growth over time
 pop_plot <- pop_pred %>% ggplot(aes(x = date_ymd, y = value, color = subpop)) +
   geom_point(size = 3) + geom_line() +
-  facet_wrap(~district, ncol = 2, scales = "free") + xlab("") + ylab("population") +
+  facet_wrap(~district, ncol = 2, scales = "free") + xlab("") + ylab("Population") +
   theme_bw() + theme(plot.title = element_text(hjust=0.5)) +
-  theme(axis.text.x = element_text(size = 10),
-        axis.title.y = element_text(size = 12))
+  theme_pop
 
-ggsave(pop_plot, filename = paste(plot_loc, "pop_estimates.pdf", sep = ""), device = "pdf",
+ggsave(pop_plot, filename = paste(plot_loc, "descriptive-analysis/pop_estimates.pdf", sep = ""), device = "pdf",
        heigh = 4, width = 7, units = "in")
