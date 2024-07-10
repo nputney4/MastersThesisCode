@@ -29,7 +29,9 @@ source(paste(code_dir, "aux_functions.R", sep = ""))
 ################################################################################
 ### -------------------- LOADING DETERMINISTIC MODEL ----------------------- ###
 ################################################################################
-path_full_model_SMC <- paste(code_dir, "models/full_model_SMC_deterministic.R", sep = "")
+path_full_model_SMC <- paste(code_dir, 
+                             "models/full_model_SMC_deterministic.R", 
+                             sep = "")
 model_SMC <- odin.dust::odin_dust(path_full_model_SMC)
 
 ################################################################################
@@ -75,7 +77,7 @@ proposal_matrix_moiss <- create_proposal_matrix(proposal_variance,
                                                 paramList_name)
 
 ################################################################################
-### ---------------------- INFERENCE P3 ------------------------------------ ###
+### ---------------------- INFERENCE STAGE 3 ------------------------------- ###
 ################################################################################
 # Dates of simulation, these are run a bit before observed data to 
 # lower influence of starting conditions
@@ -98,3 +100,12 @@ results_moiss_3 <- inf_run(model_SMC = model_SMC, param_inputs = inputs_moiss,
                             synthetic = FALSE, incidence_df = cases_moiss, 
                             save_trajectories = FALSE, 
                             rerun_n = 1000, rerun_random = TRUE, dir = code_dir)
+
+saveRDS(results_moiss_3, file = paste(data_dir, "MCMCRuns/results_moiss_070224", sep = ""))
+
+################################################################################
+### ---------------------- SAVING ESTIMATED VALUES ------------------------- ###
+################################################################################
+post_quants_moiss <- as.data.frame(summary(results_moiss_3$coda_pars[,-c(1,2,3)])[2])
+colnames(post_quants_moiss) <- c("2.5%", "25%", "50%", "75%", "97.5%")
+saveRDS(post_quants_moiss, "C:/Users/putnni/switchdrive/Chad/estimated-and-fixed-values/moiss_estimated.rds")

@@ -1,7 +1,6 @@
 ################################################################################
 ### ------------- ESTIMATING DISTRICT LEVEL POPULATION SIZES --------------- ###
 ################################################################################
-
 library(readxl)
 library(reshape2)
 
@@ -49,7 +48,7 @@ format_pop_data <- function(pop_growth, subpop){
   return(pop_growth)
 }
 
-# calculate growth rate for Chad - years going backwords (so negative growth rate)
+# Calculate growth rate for Chad - years going backwords (so negative growth rate)
 growth_rate_CHAD_total <- diff(chad_demo$population_total) / chad_demo$population_total[1:10]
 growth_rate_CHAD_total <- c(growth_rate_CHAD_total, growth_rate_CHAD_total[length(growth_rate_CHAD_total)]) # repeating 2022 value for 2023 because no data available
 
@@ -59,7 +58,7 @@ growth_rate_CHAD_u5 <- c(growth_rate_CHAD_u5, growth_rate_CHAD_u5[length(growth_
 growth_rate_CHAD_o5 <- diff(chad_demo$population_over_5) / chad_demo$population_over_5[1:10]
 growth_rate_CHAD_o5 <- c(growth_rate_CHAD_o5, growth_rate_CHAD_o5[length(growth_rate_CHAD_o5)]) # repeating 2022 value for 2023 because no data available
 
-# estimating population for each of four districts of interest in Mandoul region
+# Estimating population for each of four districts of interest in Mandoul region
 init_MOISSALA_total <- subset(mandoul_demo, (Year == 2023 & District == "Moissala"))$population_total
 init_MOISSALA_u5 <- subset(mandoul_demo, (Year == 2023 & District == "Moissala"))$population_5_and_under
 init_MOISSALA_o5 <- subset(mandoul_demo, (Year == 2023 & District == "Moissala"))$population_over_5
@@ -77,7 +76,6 @@ init_BEDJONDO_u5 <- subset(mandoul_demo, (Year == 2023 & District == "Bedjondo")
 init_BEDJONDO_o5 <- subset(mandoul_demo, (Year == 2023 & District == "Bedjondo"))$population_over_5
 
 # Applying function to all age categories
-
 pop_growth_total <- sapply(c(init_MOISSALA_total, init_GOUNDI_total, init_KOUMRA_total, init_BEDJONDO_total),
                            pred_district_pop, growth_rates = growth_rate_CHAD_total, n_years = 9)
 
@@ -105,3 +103,17 @@ pop_plot <- pop_pred %>% ggplot(aes(x = date_ymd, y = value, color = subpop)) +
 
 ggsave(pop_plot, filename = paste(plot_loc, "descriptive-analysis/pop_estimates.pdf", sep = ""), device = "pdf",
        heigh = 4, width = 7, units = "in")
+
+# convert yearly growth rate to daily growth rate
+year_to_day_growth_rate <- function(r){
+  r_D <- (1 + r)^(1 / 365) - 1
+  return(r_D)
+}
+
+avg_r_u5 <- mean(abs(growth_rate_CHAD_u5))
+avg_r_o5 <- mean(abs(growth_rate_CHAD_o5))
+r_D_u5 <- year_to_day_growth_rate(avg_r_u5)
+r_D_o5 <- year_to_day_growth_rate(avg_r_o5)
+r_D_df <- data.frame(u5 = r_D_u5, o5 = r_D_o5, row.names = "r_D")
+
+saveRDS(r_D_df, paste(chad_dir, "model-inputs/daily_growth_rates.rds", sep = ""))
