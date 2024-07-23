@@ -44,7 +44,7 @@ model_SMC <- odin.dust::odin_dust(path_full_model_SMC)
 # process for saving the loaded data can be found in the script 
 # 'savingMoissalaModelInputs.R' in this repository 
 # https://github.com/SwissTPH/moissala-smc/tree/main/misc
-load(paste(data_dir, "Data/model-inputs/moiss_inputs_10.Rdata", sep = ""))
+load(paste(data_dir, "Data/model-inputs/moiss_inputs.Rdata", sep = ""))
 source(paste(code_dir, "inputs-to-load/MCMCParameters.R", sep = ""))
 source(paste(code_dir, "inputs-to-load/start_and_proposal_values.R", sep = ""))
 
@@ -70,7 +70,7 @@ params_to_estimate_moiss <- c(a_R = "a_R", b_R = "b_R", s = "s",
 
 params_to_estimate_moiss <- c(a_R = "a_R", b_R = "b_R", s = "s", 
                               qR = "qR", eff_SMC = "eff_SMC", 
-                              size = "size", p_surv = "p_surv",
+                              size = "size",
                               z = "z", phi = "phi")
 
 ################################################################################
@@ -105,35 +105,39 @@ proposal_matrix_1 <- create_proposal_matrix(proposal_variance,
                                                 params_to_estimate_moiss, 
                                                 paramList_name)
 
-control_params_1$n_steps <- 7000
+#control_params_1$n_steps <- 5000
 results_moiss_1 <- inf_run(model_SMC = model_SMC, param_inputs = inputs_moiss,
                            control_params = control_params_1, 
                            params_to_estimate = params_to_estimate_moiss, 
                            proposal_matrix = proposal_matrix_1, 
                            adaptive_param = adaptive_param_1, 
                            start_values = start_values_1, month = TRUE, 
-                           dates = dates, age_for_inf = 'u5',
+                           dates = dates, age_for_inf = 'sep_ages',
                            synthetic = FALSE, incidence_df = cases_moiss, 
                            save_trajectories = FALSE, 
                            rerun_n = 1000, rerun_random = TRUE, dir = code_dir)
 
-saveRDS(results_moiss_1, file = paste(data_dir, "MCMCRuns/results_moiss_070724", sep = ""))
-MCMC_diag(results_moiss_1)
-plot_corr(results_moiss_1)
+saveRDS(results_moiss_1, file = paste(data_dir, "MCMCRuns/results_moiss_det_1", sep = ""))
+#MCMC_diag(results_moiss_1)
+# plot_corr(results_moiss_1)
 results_moiss_1$coda_pars[,2] %>% max() # -1712
 
-# Saving new proposal and starting values for next stage
+ # Saving new proposal and starting values for next stage
 file_proposal_1 <- paste(dir_vcv, "vcv_1.rds", sep = "")
 file_start_1 <- paste(dir_vcv, "start_values_1.rds", sep = "")
 vcv_results_1 <- extract_vcv(results_moiss_1, S_prev = 3000,
                                     file_proposal = file_proposal_1, file_start = file_start_1)
+
 ################################################################################
 ### ---------------------- INFERENCE STAGE 2 ------------------------------- ###
 ################################################################################
 start_values_2 <- readRDS(paste(dir_vcv, "start_values_1.rds", sep = ""))
-start_values_2 <- t(apply(start_values_2, 1, function(x) runif(n = 4,  min = x * 0.8, max = x)))
-start_values_2[4,] <- rep(-1.54, 4)
+start_values_2 <- t(apply(start_values_2, 1, function(x) runif(n = 3,  min = x * 0.8, max = x)))
+#start_values_2[4,] <- rep(-1.54, 4)
 proposal_matrix_2 <- readRDS(paste(dir_vcv, "vcv_1.rds", sep = ""))
+
+#control_params_2$n_steps <- 15000
+#control_params_2$n_burnin <- 5000
 
 results_moiss_2 <- inf_run(model_SMC = model_SMC, param_inputs = inputs_moiss,
                            control_params = control_params_2, 
@@ -146,7 +150,10 @@ results_moiss_2 <- inf_run(model_SMC = model_SMC, param_inputs = inputs_moiss,
                            save_trajectories = FALSE, 
                            rerun_n = 1000, rerun_random = TRUE, dir = code_dir)
 
-saveRDS(results_moiss_1, file = paste(data_dir, "MCMCRuns/results_moiss_090724", sep = ""))
+#MCMC_diag(results_moiss_2)
+#plot_corr(results_moiss_2)
+results_moiss_2$coda_pars[,2] %>% max() # -1712
+saveRDS(results_moiss_2, file = paste(data_dir, "MCMCRuns/results_moiss_det_2", sep = ""))
 
 # Saving new proposal and starting values for next stage
 file_proposal_2 <- paste(dir_vcv, "vcv_2.rds", sep = "")
@@ -154,66 +161,38 @@ file_start_2 <- paste(dir_vcv, "start_values_2.rds", sep = "")
 vcv_results_2 <- extract_vcv(results_moiss_2, S_prev = 3000,
                              file_proposal = file_proposal_2, file_start = file_start_2)
 
-################################################################################
-### ---------------------- INFERENCE STAGE 3 ------------------------------- ###
-################################################################################
-# Dates of simulation, these are run a bit before observed data to 
-# lower influence of starting conditions
-dates <- c("2006-01-01", "2022-12-31") 
-
-# Loading in start values and proposal variance based on previous runs
-# This will start the MCMC run closer to the posterior mode and with
-# a covariance matrix closer to that of the true posterior
-start_values_3 <- readRDS(paste(dir_vcv, "start_values_2.rds", sep = ""))
-proposal_matrix_3 <- readRDS(paste(dir_vcv, "vcv_2.rds", sep = ""))
-
-
-results_moiss_3 <- inf_run(model_SMC = model_SMC, param_inputs = inputs_moiss,
-                            control_params = control_params_3, 
-                            params_to_estimate = params_to_estimate_moiss, 
-                            proposal_matrix = proposal_matrix_3, 
-                            adaptive_param = adaptive_param_3, 
-                            start_values = start_values_3, month = TRUE, 
-                            dates = dates, age_for_inf = 'sep_ages',
-                            synthetic = FALSE, incidence_df = cases_moiss, 
-                            save_trajectories = FALSE, 
-                            rerun_n = 1000, rerun_random = TRUE, dir = code_dir)
-
-saveRDS(results_moiss_3, file = paste(data_dir, "MCMCRuns/results_moiss_070224", sep = ""))
-
+# ################################################################################
+# ### ---------------------- INFERENCE STAGE 3 ------------------------------- ###
+# ################################################################################
+# # Dates of simulation, these are run a bit before observed data to 
+# # lower influence of starting conditions
+# dates <- c("2006-01-01", "2022-12-31") 
+# 
+# # Loading in start values and proposal variance based on previous runs
+# # This will start the MCMC run closer to the posterior mode and with
+# # a covariance matrix closer to that of the true posterior
+# start_values_3 <- readRDS(paste(dir_vcv, "start_values_2.rds", sep = ""))
+# proposal_matrix_3 <- readRDS(paste(dir_vcv, "vcv_2.rds", sep = ""))
+# 
+# results_moiss_3 <- inf_run(model_SMC = model_SMC, param_inputs = inputs_moiss,
+#                             control_params = control_params_3, 
+#                             params_to_estimate = params_to_estimate_moiss, 
+#                             proposal_matrix = proposal_matrix_3, 
+#                             adaptive_param = adaptive_param_3, 
+#                             start_values = start_values_3, month = TRUE, 
+#                             dates = dates, age_for_inf = 'sep_ages',
+#                             synthetic = FALSE, incidence_df = cases_moiss, 
+#                             save_trajectories = FALSE, 
+#                             rerun_n = 1000, rerun_random = TRUE, dir = code_dir)
+# 
+# saveRDS(results_moiss_3, file = paste(data_dir, "MCMCRuns/results_moiss_070224", sep = ""))
+# MCMC_diag(results_moiss_3)
+# results_moiss_3$coda_pars[,2] %>% max() # -1712
 ################################################################################
 ### ---------------------- SAVING ESTIMATED VALUES ------------------------- ###
 ################################################################################
-post_quants_moiss <- as.data.frame(summary(results_moiss_3$coda_pars[,-c(1,2,3)])[2])
-best_params <- which.max(results_moiss_3$coda_pars)
+post_quants_moiss <- as.data.frame(summary(results_moiss_2$coda_pars[,-c(1,2,3)])[2])
+best_params <- results_moiss_2$coda_pars[which.max(results_moiss_2$coda_pars[,2]),-c(1,2,3)]
 post_quants_moiss$best_params <- best_params
 colnames(post_quants_moiss) <- c("2.5%", "25%", "50%", "75%", "97.5%", "best_params")
-saveRDS(post_quants_moiss, "C:/Users/putnni/switchdrive/Chad/estimated-and-fixed-values/moiss_estimated.rds")
-
-
-################################################################################
-### ---------------------- LOOKING AT CHOICE OF D ------------------------- ###
-################################################################################
-diff_lag_inf <- function(lag){
-  if(lag == 0){
-    lag_text <- ""
-  }else{lag_text <- paste("_", lag, sep = "")}
-  load(paste(data_dir, sprintf("Data/model-inputs/moiss_inputs%s.Rdata", lag_text), 
-             sep = ""))
-  control_params_1$n_steps <- 7000
-  results_moiss_1 <- inf_run(model_SMC = model_SMC, param_inputs = inputs_moiss,
-                             control_params = control_params_1, 
-                             params_to_estimate = params_to_estimate_moiss, 
-                             proposal_matrix = proposal_matrix_1, 
-                             adaptive_param = adaptive_param_1, 
-                             start_values = start_values_1, month = TRUE, 
-                             dates = dates, age_for_inf = 'sep_ages',
-                             synthetic = FALSE, incidence_df = cases_moiss, 
-                             save_trajectories = FALSE, 
-                             rerun_n = 1000, rerun_random = TRUE, dir = code_dir)
-  saveRDS(results_moiss_1, file = paste(data_dir, 
-                                        sprintf("MCMCRuns/results_moiss%s", lag_text), 
-                                        sep = ""))
-}
-
-sapply(seq(0, 90, by = 10), diff_lag_inf)
+saveRDS(post_quants_moiss, "C:/Users/putnni/switchdrive/Chad/estimated-and-fixed-values/moiss_estimated_det.rds")

@@ -28,3 +28,14 @@ mod_SIR_discrete <- SIR_discrete$new(pars = list(beta = 0.4, gamma = 0.1),
                                      n_particles = 10)
 n_times <- 200
 x <- mod_SIR_discrete$simulate(1:n_times)
+
+# Plotting particles for each compartment
+par(mar = c(4.1, 5.1, 0.5, 0.5), las = 1)
+cols <- c(S = "#8c8cd9", I = "#cc0044", R = "#999966")
+time <- seq(1, n_times)
+matplot(time, t(x[1, , ]), type = "l",
+        xlab = "Time", ylab = "Number of individuals",
+        col = cols[["S"]], lty = 1, ylim = range(x))
+matlines(time, t(x[2, , ]), col = cols[["I"]], lty = 1)
+matlines(time, t(x[3, , ]), col = cols[["R"]], lty = 1)
+legend("left", lwd = 1, col = cols, legend = names(cols), bty = "n")

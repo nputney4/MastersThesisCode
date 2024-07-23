@@ -4,14 +4,21 @@
 library(flextable)
 library(dplyr)
 data_dir <- "C:/Users/putnni/switchdrive/Chad/"
-results_moiss <- readRDS(file = paste(data_dir, "MCMCRuns/results_moiss_070224", sep = ""))
-results_moiss <- readRDS(file = paste(data_dir, "MCMCRuns/results_moiss_070724", sep = ""))
-results_moiss <- readRDS(file = paste(data_dir, "MCMCRuns/results_moiss_090724", sep = ""))
+# results_moiss <- readRDS(file = paste(data_dir, "MCMCRuns/results_moiss_070224", sep = ""))
+# results_moiss <- readRDS(file = paste(data_dir, "MCMCRuns/results_moiss_070724", sep = ""))
+results_moiss <- readRDS(file = paste(data_dir, "MCMCRuns/results_moiss_det_2", sep = ""))
 params_to_estimate_moiss <- c(a_R = "a_R", b_R = "b_R", s = "s", 
                               qR = "qR", z = "z", phi = "phi", eff_SMC = "eff_SMC")
 params_to_estimate_moiss <- c(a_R = "a_R", b_R = "b_R", s = "s", 
                               qR = "qR", eff_SMC = "eff_SMC", 
-                              size = "size", p_surv = "p_surv")
+                              size = "size", phi = "phi", z = "z")
+
+theme_plots <- theme(plot.title = element_text(hjust=0.5, size=20),
+                     axis.text.x = element_text(size = 14),
+                     axis.title.x = element_blank(),
+                     axis.title.y = element_text(size = 16),
+                     legend.title = element_text(size=16),
+                     legend.text = element_text(size = 14)) 
 
 ################################################################################
 ### -------------------- LOADING DETERMINISTIC MODEL ----------------------- ###
@@ -20,6 +27,12 @@ path_full_model_SMC <- paste(code_dir,
                              "models/full_model_SMC_deterministic.R", 
                              sep = "")
 model_SMC <- odin.dust::odin_dust(path_full_model_SMC)
+
+################################################################################
+### --------------------- FUNCTION SAVING ALL PLOTS ------------------------ ###
+################################################################################
+source("C:/Users/putnni/Documents/MastersThesisTPH/MastersThesisGit/createResultsPlots.R")
+analyze_results(results_moiss, model_SMC, stochastic = FALSE)
 
 ################################################################################
 ### -------------------- LOADING AUXILIARY FUNCTIONS ----------------------- ###

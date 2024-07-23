@@ -1,0 +1,14 @@
+% latex table generated in R 4.1.0 by xtable 1.8-4 package
+% Sun Jul 21 13:59:06 2024
+\begin{table}[ht]
+\centering
+\begin{tabular}{rlrr}
+  \hline
+ & Simulation & Total\_Cases & U5\_Cases \\ 
+  \hline
+1 & 4RoundsJuly & 467886.47 & 317019.14 \\ 
+  2 & 5RoundsJuly & 457552.33 & 307729.53 \\ 
+  3 & 5RoundsJune & 456466.39 & 307563.61 \\ 
+   \hline
+\end{tabular}
+\end{table}

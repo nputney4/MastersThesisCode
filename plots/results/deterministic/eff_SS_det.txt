@@ -1,0 +1,12 @@
+% latex table generated in R 4.1.0 by xtable 1.8-4 package
+% Mon Jul 22 11:40:26 2024
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrrrrrr}
+  \hline
+ & z & qR & a\_R & b\_R & eff\_SMC & s & phi & size \\ 
+  \hline
+Effective SS & 4172.91 & 3658.35 & 4014.84 & 3862.63 & 4007.31 & 3556.30 & 3798.93 & 3464.00 \\ 
+   \hline
+\end{tabular}
+\end{table}

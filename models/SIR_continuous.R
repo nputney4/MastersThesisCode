@@ -15,6 +15,6 @@ SIR_continuous <- odin::odin({
 })
 
 ## Running the model
-mod_SIR_continuous <- SIR_continuous$new(beta=0.3, gamma=0.2)
+mod_SIR_continuous <- SIR_continuous$new(beta = 0.3, gamma = 0.2)
 
 mod_SIR_continuous$run(1:20)
