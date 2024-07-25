@@ -1,0 +1,20 @@
+% latex table generated in R 4.1.0 by xtable 1.8-4 package
+% Thu Jul 25 09:06:38 2024
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrr}
+  \hline
+ & Point est. & Upper C.I. \\ 
+  \hline
+log\_posterior & 1.01 & 1.02 \\ 
+  z & 1.00 & 1.01 \\ 
+  qR & 1.00 & 1.01 \\ 
+  a\_R & 1.01 & 1.02 \\ 
+  b\_R & 1.00 & 1.01 \\ 
+  eff\_SMC & 1.00 & 1.01 \\ 
+  s & 1.01 & 1.01 \\ 
+  phi & 1.01 & 1.02 \\ 
+  size & 1.02 & 1.05 \\ 
+   \hline
+\end{tabular}
+\end{table}
